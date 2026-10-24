@@ -1,0 +1,23 @@
+Upcoming Technical Event Information
+
+Event name: Agentic AI Technical Seminar Showcase
+Department: Information Technology
+Venue: IT Seminar Hall, PVG's College of Engineering & S. S. Dhamankar Institute of Management, Nashik
+Venue maximum seating: 500
+Current registrations so far: 420
+
+Event checklist template:
+- Venue
+- Registration
+- Technical setup
+- Speaker coordination
+- Feedback collection
+
+Event agenda:
+1. Introduction and welcome
+2. Keynote seminar presentation
+3. Live prototype demonstration
+4. Question and answer session
+5. Closing remarks
+
+Contact for coordination: Seminar Coordinator, Department of Information Technology.

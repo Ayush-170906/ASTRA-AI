@@ -1,0 +1,20 @@
+Technical Event Planning Guidelines
+
+All technical seminar and workshop events organized by the Information Technology department
+must follow the standard checklist below before the event date.
+
+Checklist items:
+1. Venue booking confirmed with the college administration.
+2. Registration form circulated at least 7 days before the event.
+3. Technical setup (projector, microphone, laptop, internet) tested one day in advance.
+4. Speaker or presenter coordination confirmed, including backup slides.
+5. Feedback form prepared for distribution after the event.
+
+Registration capacity planning:
+Event capacity should always be planned with a 10% buffer below the venue's maximum seating
+to allow for late walk-ins and volunteer staff. If the venue's maximum seating is 500, the
+recommended planned registration capacity is 450, but the hard maximum standard registration
+capacity for a single technical event is 500 seats unless a larger venue is booked.
+
+Timeline recommendation:
+Announcements should go out 10 days before the event, with a reminder 2 days before the event.

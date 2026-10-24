@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #edf3fa; background: transparent; }
+    .panel { min-height: 350px; display: grid; grid-template-columns: 220px 1fr; align-items: center;
+      gap: 26px; padding: 22px 26px; border: 1px solid rgba(255,255,255,.13);
+      border-radius: 18px; background: rgba(10,15,25,.75); backdrop-filter: blur(12px); }
+    .orb-wrap { display: grid; justify-items: center; gap: 13px; }
+    .orb { width: 144px; height: 144px; border-radius: 50%; position: relative;
+      background: radial-gradient(circle at 35% 28%, #dff8ff 0 3%, #6cddff 12%, #5483ff 38%, #4323a7 68%, #090f26 100%);
+      box-shadow: 0 0 24px rgba(84,196,255,.45), 0 0 65px rgba(85,73,235,.45), inset -12px -16px 30px rgba(2,6,23,.74);
+      animation: breathe 3s ease-in-out infinite; transition: box-shadow .3s, filter .3s; }
+    .orb:before,.orb:after { content:""; position:absolute; inset:12px; border-radius:50%; border:1px solid rgba(209,244,255,.28); }
+    .orb:after { inset:23px; border-color:rgba(193,203,255,.19); }
+    .orb.listening { animation: listen .9s ease-in-out infinite; box-shadow: 0 0 28px #51e4ff, 0 0 82px rgba(36,192,255,.85), inset -10px -14px 26px rgba(2,6,23,.6); }
+    .orb.processing { animation: process 1.15s linear infinite; filter:hue-rotate(42deg); box-shadow:0 0 30px #a792ff, 0 0 86px rgba(139,92,246,.8); }
+    .orb.speaking { animation: speak .36s ease-in-out infinite alternate; box-shadow:0 0 35px #9effea,0 0 90px rgba(91,255,213,.8); }
+    @keyframes breathe { 50% { transform:scale(1.04); } }
+    @keyframes listen { 50% { transform:scale(1.09); } }
+    @keyframes process { to { transform:rotate(360deg); } }
+    @keyframes speak { to { transform:scale(1.12); } }
+    .orb-state { color:#bdd0e6; font-size:.77rem; letter-spacing:.12em; text-transform:uppercase; }
+    .copy h2 { margin:0 0 7px; font-size:1.2rem; letter-spacing:-.02em; }
+    .copy p { color:#aebbd0; font-size:.88rem; line-height:1.5; margin:6px 0 12px; }
+    .status { color:#e8f2ff; font-size:.86rem; font-weight:650; min-height:22px; }
+    .live { display:none; color:#7cf6c8; font-size:.76rem; margin:5px 0; }
+    .live.on { display:block; }
+    .wave { height:22px; display:flex; align-items:center; gap:3px; opacity:.35; margin:6px 0; }
+    .wave i { display:block; width:3px; height:7px; border-radius:4px; background:#71ddff; }
+    .wave.active { opacity:1; }
+    .wave.active i { animation: wave .7s ease-in-out infinite alternate; }
+    .wave i:nth-child(3n) { animation-delay:.16s; } .wave i:nth-child(2n) { animation-delay:.31s; }
+    @keyframes wave { to { height:21px; } }
+    .actions { display:flex; flex-wrap:wrap; gap:9px; margin:10px 0; }
+    button { border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.08); color:#f2f6fc;
+      padding:9px 13px; border-radius:9px; font-size:.84rem; font-weight:650; cursor:pointer; }
+    button.primary { border:0; color:#101827; background:linear-gradient(100deg,#79dcff,#aaa0ff); }
+    button:disabled { opacity:.42; cursor:not-allowed; }
+    .transcript-label { color:#8998ad; font-size:.68rem; letter-spacing:.08em; text-transform:uppercase; margin-top:8px; }
+    .transcript { max-width:100%; min-height:1.4em; overflow-wrap:anywhere; color:#f3f5f8; font-size:.85rem; }
+    .transcript.interim { color:#aebbd0; font-style:italic; }
+    .compat { color:#8998ad!important; font-size:.72rem!important; margin-top:9px!important; }
+    @media (max-width:560px) { .panel { grid-template-columns:1fr; gap:12px; padding:17px; }
+      .orb { width:112px; height:112px; } }
+    @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration:.01ms!important; animation-iteration-count:1!important; } }
+  </style>
+</head>
+<body>
+  <section class="panel" aria-label="ASTRA Voice Assistant Mode">
+    <div class="orb-wrap">
+      <div id="orb" class="orb" role="img" aria-label="AI orb idle"></div>
+      <div id="orbState" class="orb-state">Idle</div>
+    </div>
+    <div class="copy">
+      <h2>Voice Assistant Mode</h2>
+      <div id="status" class="status" aria-live="polite">Voice is off. Activate it to use your microphone.</div>
+      <div id="live" class="live" aria-live="polite">● MICROPHONE ACTIVE</div>
+      <div id="wave" class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="actions">
+        <button id="start" class="primary" type="button">🎙 Activate microphone</button>
+        <button id="stop" type="button" disabled>■ Stop listening</button>
+      </div>
+      <div class="transcript-label">Live transcription</div>
+      <div id="liveTranscript" class="transcript interim" aria-live="polite">Waiting for voice activation.</div>
+      <div class="transcript-label">Confirmed transcript</div>
+      <div id="transcript" class="transcript" aria-live="polite">No confirmed transcript yet.</div>
+      <p class="compat">Wake-word mode works in compatible browsers (typically Chromium); otherwise click-to-listen or text entry is available. This app does not store audio. Browser speech recognition may process audio according to the browser provider's behavior, and starts only after microphone activation.</p>
+    </div>
+  </section>
+  <script>
+(() => {
+      const orb = document.getElementById('orb');
+      const orbState = document.getElementById('orbState');
+      const statusLine = document.getElementById('status');
+      const live = document.getElementById('live');
+      const wave = document.getElementById('wave');
+      const transcriptBox = document.getElementById('transcript');
+      const liveTranscriptBox = document.getElementById('liveTranscript');
+      const startButton = document.getElementById('start');
+      const stopButton = document.getElementById('stop');
+      const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      let recognition = null;
+      let listening = false;
+      let userStopped = true;
+      let continuousWake = false;
+      let commandMode = false;
+      let latestTranscript = '';
+      let requestId = '';
+      let lastWorkflowStatus = '';
+      let responseSpokenFor = '';
+      let recognitionDisabled = !Recognition;
+
+      function send(value) {
+        window.parent.postMessage({
+          isStreamlitMessage: true,
+          type: 'streamlit:setComponentValue',
+          value
+        }, '*');
+      }
+      function id() {
+        return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random();
+      }
+      function setState(name, text) {
+        orb.className = 'orb' + (name === 'Idle' ? '' : ' ' + name.toLowerCase());
+        orbState.textContent = name;
+        orb.setAttribute('aria-label', 'AI orb ' + name.toLowerCase());
+        statusLine.textContent = text;
+        const active = name === 'Listening';
+        live.classList.toggle('on', active);
+        wave.classList.toggle('active', active);
+      }
+      function setListeningControls(active) {
+        listening = active;
+        startButton.disabled = active || recognitionDisabled;
+        stopButton.disabled = !active;
+      }
+      function wakePhraseMatch(text) {
+        // Speech services commonly render ASTRA as “Astra”, “Asta”, “Esther”,
+        // or as separated letters. Keep the wake phrase out of the task text.
+        return /\b(?:hey|hi|okay|ok)[,;:.!?\s-]+(?:a\s*\.?\s*s\s*\.?\s*t\s*\.?\s*r\s*\.?\s*a|astra|asta|esther|aster)\b[,:;.!?\s-]*/i.exec(text);
+      }
+      function commandAfterWake(text) {
+        const match = wakePhraseMatch(text);
+        return match ? text.slice(match.index + match[0].length).trim() : '';
+      }
+      function cleanCommand(text) {
+        return text.trim().replace(/^[:,.\s-]+|[\s,.-]+$/g, '');
+      }
+      function speak(text) {
+        if (!('speechSynthesis' in window) || !text) return false;
+        try {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.onstart = () => setState('Speaking', 'Responding');
+          utterance.onend = () => setState('Idle', 'Response complete. Activate the microphone to speak again.');
+          utterance.onerror = () => setState('Idle', 'Response ready. Activate the microphone to speak again.');
+          window.speechSynthesis.speak(utterance);
+          return true;
+        } catch (_) { return false; }
+      }
+      function confirmTranscript(text) {
+        const clean = cleanCommand(text);
+        if (!clean || requestId) return;
+        requestId = id();
+        latestTranscript = clean;
+        liveTranscriptBox.textContent = clean;
+        liveTranscriptBox.classList.remove('interim');
+        transcriptBox.textContent = clean;
+        userStopped = true;
+        try { recognition && recognition.stop(); } catch (_) {}
+        setListeningControls(false);
+        setState('Idle', 'Transcript confirmed. Edit it in Custom Goal before running the agent.');
+        send({ kind: 'transcript', id: requestId, transcript: clean });
+      }
+      function startListening() {
+        if (!Recognition) {
+          recognitionDisabled = true;
+          setListeningControls(false);
+          setState('Idle', 'Speech recognition is unavailable in this browser. Use the text goal input below.');
+          send({ kind: 'status', id: id(), status: 'unsupported', message: 'Speech recognition is unavailable. Use the text goal input below.' });
+          return;
+        }
+        if (listening) return;
+        requestId = '';
+        latestTranscript = '';
+        userStopped = false;
+        recognition = new Recognition();
+        continuousWake = ('continuous' in recognition);
+        try { recognition.continuous = continuousWake; } catch (_) { continuousWake = false; }
+        transcriptBox.textContent = 'Listening for a command…';
+        liveTranscriptBox.textContent = continuousWake
+          ? 'Waiting for “Hey ASTRA”…' : 'Speak your command after activation.';
+        liveTranscriptBox.classList.add('interim');
+        recognition.interimResults = true;
+        recognition.lang = 'en-IN';
+        commandMode = !continuousWake;
+        recognition.onstart = () => {
+          setListeningControls(true);
+          setState('Listening', continuousWake
+            ? 'Listening for “Hey ASTRA”… say the wake phrase, then your command.'
+            : 'Click-to-listen active. Speak your command now; wake-word detection is unavailable.');
+        };
+        recognition.onresult = (event) => {
+          const heard = Array.from(event.results).map(r => r[0].transcript).join(' ').trim();
+          const wake = wakePhraseMatch(heard);
+          if (continuousWake && !commandMode) {
+            if (!wake) return;
+            commandMode = true;
+            setState('Listening', 'Wake phrase heard. Speak your command…');
+          }
+          const command = continuousWake
+            ? commandAfterWake(heard)
+            : (wake ? commandAfterWake(heard) : heard);
+          const last = event.results[event.results.length - 1];
+          if (continuousWake && !commandMode) return;
+          liveTranscriptBox.textContent = cleanCommand(command) ||
+            (continuousWake ? 'Wake phrase heard. Speak your command…' : 'Listening…');
+          liveTranscriptBox.classList.toggle('interim', !(last && last.isFinal));
+          if (last && last.isFinal && cleanCommand(command)) confirmTranscript(command);
+        };
+        recognition.onerror = (event) => {
+          userStopped = true;
+          setListeningControls(false);
+          const denied = event.error === 'not-allowed' || event.error === 'service-not-allowed';
+          const message = denied
+            ? 'Microphone permission was denied. Use the text goal input below, or allow access in browser settings and try again.'
+            : 'Voice input stopped (' + event.error + '). Use text input or activate the microphone to retry.';
+          setState('Idle', message);
+          liveTranscriptBox.textContent = message;
+          send({ kind: 'status', id: id(), status: denied ? 'permission-denied' : event.error, message });
+        };
+        recognition.onend = () => {
+          if (!listening || userStopped || requestId) return;
+          if (continuousWake) {
+            try { recognition.start(); }
+            catch (_) {
+              setListeningControls(false);
+              setState('Idle', 'Wake-word listening paused. Activate the microphone to resume, or use text input.');
+            }
+          } else {
+            setListeningControls(false);
+            setState('Idle', 'Listening ended. Activate the microphone to try again, or use text input.');
+          }
+        };
+        try { recognition.start(); }
+        catch (error) {
+          setListeningControls(false);
+          const message = error.name === 'NotAllowedError'
+            ? 'Microphone permission was denied. Use the text goal input below.'
+            : 'Could not start speech recognition. Use the text goal input below.';
+          setState('Idle', message);
+          send({ kind: 'status', id: id(), status: 'start-error', message });
+        }
+      }
+      function stopListening() {
+        userStopped = true;
+        try { recognition && recognition.stop(); } catch (_) {}
+        setListeningControls(false);
+        liveTranscriptBox.textContent = latestTranscript || 'Listening stopped. No transcript was confirmed.';
+        liveTranscriptBox.classList.add('interim');
+        setState('Idle', 'Listening stopped. Activate the microphone when you are ready.');
+      }
+      startButton.addEventListener('click', startListening);
+      stopButton.addEventListener('click', stopListening);
+
+      window.addEventListener('message', (event) => {
+        const data = event.data || {};
+        if (data.type === 'streamlit:render') {
+          const args = data.args || {};
+          const currentStatus = args.workflow_status || 'IDLE';
+          if (currentStatus !== lastWorkflowStatus) {
+            lastWorkflowStatus = currentStatus;
+            if (currentStatus === 'WAITING_FOR_APPROVAL') {
+              setState('Processing', 'Waiting for your approval in Manual Mode.');
+            } else if (currentStatus === 'COMPLETED' || currentStatus === 'TERMINATED' || currentStatus === 'ESCALATED') {
+              const message = args.workflow_message || 'Your request has been processed.';
+              if (requestId && responseSpokenFor !== requestId) {
+                responseSpokenFor = requestId;
+                if (!speak(message)) setState('Speaking', message);
+              } else {
+                setState('Idle', message);
+              }
+            } else if (!listening && currentStatus === 'IDLE') {
+              setState('Idle', Recognition
+                ? 'Voice is off. Activate it to use your microphone.'
+                : 'Speech recognition is unavailable in this browser. Use the text goal input below.');
+            }
+          }
+        }
+      });
+      window.parent.postMessage({ isStreamlitMessage: true, type: 'streamlit:componentReady', apiVersion: 1 }, '*');
+      window.parent.postMessage({ isStreamlitMessage: true, type: 'streamlit:setFrameHeight', height: 370 }, '*');
+      if (!Recognition) {
+        recognitionDisabled = true;
+        startButton.disabled = true;
+        startButton.textContent = 'Speech recognition unavailable';
+        liveTranscriptBox.textContent = 'Use the Custom Goal text input below.';
+        setState('Idle', 'Speech recognition is unavailable in this browser. Use the text goal input below.');
+      }
+    })();
+  </script>
+</body>
+</html>
+
+

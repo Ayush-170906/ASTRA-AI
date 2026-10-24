@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "agentic-ai-prototype",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "streamlit", "run", "04_PROTOTYPE/app.py", "--server.headless", "true"],
+      "port": 8501
+    }
+  ]
+}

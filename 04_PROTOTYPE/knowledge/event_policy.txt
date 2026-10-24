@@ -1,0 +1,19 @@
+Technical Event Communication Policy
+
+External announcements policy:
+Any announcement, email, or message sent to all registered participants of a technical event
+is classified as an external communication action. External communications require explicit
+review and approval from the seminar coordinator or event owner before being sent, because they
+reach third parties outside the immediate control of the organizing student or system.
+
+This applies regardless of whether the message is sent manually or by an automated system or
+agent. Automated systems must never send participant-facing communications without a human
+approval step immediately before the send action.
+
+Approval record-keeping:
+Every approval or denial of an external communication must be logged with a timestamp and a
+reason, whether approved or denied, for audit purposes.
+
+Data handling policy:
+No real participant personal data (names, emails, phone numbers) should be used in a prototype
+or demonstration system. Demonstrations must use mock or placeholder recipient data only.
